@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, ChangeEvent, FormEvent, useCallback } from 'react';
-import Image from 'next/image';
 
 // 📝 Configurações de validação
 const MAX_FILE_SIZE_MB = 2;
@@ -217,12 +216,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-700">Preview:</h3>
             <div className="relative w-full h-48 border border-gray-300 rounded-md overflow-hidden bg-gray-50">
-              <Image
+              <img
                 src={previewUrl}
                 alt="Preview da imagem"
-                fill
-                className="object-contain"
-                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain"
               />
             </div>
           </div>

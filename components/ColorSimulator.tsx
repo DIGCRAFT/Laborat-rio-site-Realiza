@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Check, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -112,18 +111,16 @@ export default function ColorSimulator({
         <div className="grid md:grid-cols-3 gap-6">
           {/* Imagem de Ambiente (Expanded) */}
           <div className="md:col-span-2 relative aspect-video rounded-2xl overflow-hidden group bg-gray-100">
-            <Image 
+            <img 
               // DICA: Para usar imagens reais, salve-as em /public/images/finishes/ com o nome da cor (ex: preto.png)
               src={`/images/finishes/${selectedColorId}.png`}
               alt="Preview Ambiente"
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               onError={(e) => {
                 // Fallback caso a imagem local não exista ainda
                 const target = e.target as HTMLImageElement;
                 target.src = `https://picsum.photos/seed/finish-${selectedColorId}/800/450`;
               }}
-              referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute bottom-6 left-6 text-white">
@@ -134,18 +131,16 @@ export default function ColorSimulator({
 
           {/* Perfil Técnico (Expanded) */}
           <div className="relative aspect-square md:aspect-auto rounded-2xl overflow-hidden border border-gray-100 bg-white group">
-            <Image 
+            <img 
               // DICA: Para usar imagens reais, salve-as em /public/images/profiles/ com o nome da cor (ex: preto.png)
               src={`/images/profiles/${selectedColorId}.png`}
               alt="Perfil Técnico"
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               onError={(e) => {
                 // Fallback caso a imagem local não exista ainda
                 const target = e.target as HTMLImageElement;
                 target.src = `https://picsum.photos/seed/profile-${selectedColorId}/400/400`;
               }}
-              referrerPolicy="no-referrer"
             />
             <div className="absolute top-3 left-3">
               <span className="bg-white/90 backdrop-blur-sm text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest text-gray-500 shadow-sm">

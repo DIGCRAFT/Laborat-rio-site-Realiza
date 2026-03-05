@@ -82,6 +82,56 @@ Deixei a estrutura dos amadeirados pronta. Se você quiser testar uma imagem rea
 
 ---
 
+## 🧩 Onde colocar o código no seu site real? (Guia Prático)
+
+Se você ficou na dúvida de onde "encaixar" o simulador no seu projeto `realiza-frontend-client`, aqui está a explicação definitiva:
+
+### 1. O arquivo `ColorSimulator.tsx`
+Este arquivo é um **Componente**. Pense nele como uma "peça de Lego" pronta. 
+- **Onde salvar:** Coloque-o na pasta `src/components/`.
+- **Relação com seus arquivos atuais:** Se você já tem `ColorVisualizer.tsx` e `ColorSelector.tsx`, o meu `ColorSimulator.tsx` faz o trabalho dos dois juntos de forma integrada. Você pode substituir os seus pelo meu ou usar o meu como uma nova versão melhorada.
+
+### 2. Onde "chamar" o simulador (Onde ele aparece?)
+Você **NÃO** coloca esse código no `<head>`. Você o coloca dentro do conteúdo visual da sua página (geralmente no `page.tsx` ou dentro de uma seção de orçamento).
+
+**Exemplo de uso no seu `page.tsx`:**
+```tsx
+// 1. Primeiro você importa (lá no topo do arquivo)
+import ColorSimulator from '@/components/ColorSimulator';
+
+export default function OrcamentoPage() {
+  return (
+    <main>
+      <section className="py-20">
+        <div className="container mx-auto">
+          <h1 className="text-4xl font-bold mb-10">Solicite seu Orçamento</h1>
+          
+          {/* 2. Você "chama" o componente onde quer que ele apareça na tela */}
+          <div className="grid lg:grid-cols-2 gap-12">
+             <div>
+                <h2 className="text-2xl mb-4">Escolha o acabamento:</h2>
+                <ColorSimulator showWoodColors={false} />
+             </div>
+             
+             <div>
+                {/* Aqui iria o seu formulário de contato, por exemplo */}
+                <ContactForm />
+             </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+```
+
+### 3. Resumo da Ópera
+- **Head:** Serve para configurações invisíveis (SEO, Google Analytics).
+- **Componente (ColorSimulator):** Serve para a parte visual que o cliente clica e vê.
+- **Integração:** Se o seu site real já tem um seletor, você pode simplesmente trocar o código antigo pelo `<ColorSimulator />`.
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 - **Framework:** Next.js 15 (App Router)
 - **Estilização:** Tailwind CSS

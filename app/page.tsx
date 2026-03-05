@@ -16,7 +16,6 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import Image from 'next/image';
 import { colors } from '@/lib/colors';
 import ColorSimulator from '@/components/ColorSimulator';
 import ImageUploader from '@/components/ImageUploader';
@@ -172,18 +171,16 @@ export default function BudgetPage() {
             <div className="absolute -inset-4 bg-emerald-400/10 blur-3xl rounded-full opacity-50 group-hover:opacity-80 transition-opacity" />
             
             <div className="relative h-full w-full bg-white rounded-[1.25rem] overflow-hidden">
-              <Image 
+              <img 
                 src={customProfileImage || `/images/profiles/${selectedColorId}.png`}
                 alt="Perfil Técnico"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 onError={(e) => {
                   if (!customProfileImage) {
                     const target = e.target as HTMLImageElement;
                     target.src = `https://picsum.photos/seed/profile-${selectedColorId}/400/400`;
                   }
                 }}
-                referrerPolicy="no-referrer"
               />
               
               {/* Overlay Labels */}
