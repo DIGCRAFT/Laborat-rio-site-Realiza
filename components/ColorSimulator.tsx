@@ -89,7 +89,7 @@ export default function ColorSimulator({
                   className={`w-full h-full rounded-full overflow-hidden ${color.id === 'white' ? 'border border-gray-200' : ''}`}
                 >
                   {color.image ? (
-                    <img src={color.image} alt={color.name} className="w-full h-full object-cover scale-150" />
+                    <img src={color.image} alt={color.name} className="w-full h-full object-cover object-top scale-150" />
                   ) : (
                     <div className="w-full h-full" style={{ backgroundColor: color.hexCode }} />
                   )}
@@ -112,7 +112,7 @@ export default function ColorSimulator({
             className="w-16 h-16 rounded-full shadow-inner border border-black/5 overflow-hidden flex-shrink-0"
           >
             {currentColor.image ? (
-              <img src={currentColor.image} alt={currentColor.name} className="w-full h-full object-cover scale-150" />
+              <img src={currentColor.image} alt={currentColor.name} className="w-full h-full object-cover object-top scale-150" />
             ) : (
               <div className="w-full h-full" style={{ backgroundColor: currentColor.hexCode }} />
             )}
