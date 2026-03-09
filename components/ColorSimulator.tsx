@@ -86,7 +86,7 @@ export default function ColorSimulator({
                 selectedColorId === color.id ? 'border-emerald-500 scale-110' : 'border-transparent group-hover:border-gray-100'
               }`}>
                 <div 
-                  className={`w-full h-full rounded-full border overflow-hidden ${color.id === 'white' ? 'border-gray-200' : 'border-transparent'}`}
+                  className={`w-full h-full rounded-full overflow-hidden ${color.id === 'white' ? 'border border-gray-200' : ''}`}
                 >
                   {color.image ? (
                     <img src={color.image} alt={color.name} className="w-full h-full object-cover" />
@@ -109,7 +109,7 @@ export default function ColorSimulator({
 
         <div className="bg-gray-50 rounded-2xl p-6 flex items-center gap-6">
           <div 
-            className="w-16 h-16 rounded-full shadow-inner border border-black/5 overflow-hidden"
+            className="w-16 h-16 rounded-full shadow-inner border border-black/5 overflow-hidden flex-shrink-0"
           >
             {currentColor.image ? (
               <img src={currentColor.image} alt={currentColor.name} className="w-full h-full object-cover" />
@@ -148,17 +148,25 @@ export default function ColorSimulator({
                   src={currentColor.finishImage || `/images/finishes/${selectedColorId}.png`}
                   alt="Preview Ambiente"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ objectPosition: 'center' }}
+                  onLoad={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'block';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const fallback = parent.querySelector('.fallback-text');
+                      if (fallback) fallback.remove();
+                    }
+                  }}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    // Se a imagem falhar, mostramos o HexCode como fundo
                     target.style.display = 'none';
                     const parent = target.parentElement;
                     if (parent) {
                       parent.style.backgroundColor = currentColor.hexCode || '#f3f4f6';
-                      // Adiciona um texto de fallback se não houver imagem
                       if (!parent.querySelector('.fallback-text')) {
                         const text = document.createElement('div');
-                        text.className = 'fallback-text absolute inset-0 flex items-center justify-center text-white/20 font-bold text-4xl uppercase tracking-widest pointer-events-none';
+                        text.className = 'fallback-text absolute inset-0 flex items-center justify-center text-white/20 font-bold text-4xl uppercase tracking-widest pointer-events-none text-center px-4';
                         text.innerText = currentColor.name;
                         parent.appendChild(text);
                       }

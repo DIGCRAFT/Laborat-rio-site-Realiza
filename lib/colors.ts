@@ -69,8 +69,8 @@ const WOOD_COLORS: Color[] = [
     hexCode: "#8b3a0e", 
     category: "wood" as const,
     image: "/images/profiles/color_cerejeira-real.png",
-    finishImage: "/images/finishes/acabamento-cerejeira-real.png",
-    profileImage: "/images/profiles/perfil-cerejeira-real.png"
+    finishImage: "/images/finishes/Acabamento panel_cerejeira-real.png",
+    profileImage: "/images/profiles/panel_cerejeira-real.png"
   },
 ];
 
@@ -89,7 +89,7 @@ const SOLID_COLORS: Color[] = [
     name: "Preto", 
     hexCode: "#1a1a1a", 
     finishImage: "/images/finishes/esquadria-preto.png",
-    profileImage: "/images/profiles/perfil-preto.png",
+    profileImage: "/images/profiles/Preto.png",
     category: "solid" as const 
   },
   { 
