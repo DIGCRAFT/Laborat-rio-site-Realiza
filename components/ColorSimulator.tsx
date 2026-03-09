@@ -4,21 +4,31 @@ import React, { useState } from 'react';
 import { Check, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { colors as GLOBAL_COLORS } from '@/lib/colors';
+import { WOOD_COLORS, SOLID_COLORS, getColorById } from '@/lib/colors';
+import { Color } from '@/types/products';
 
 interface ColorSimulatorProps {
-  showWoodColors?: boolean; // Se falso, mostra apenas sólidos
+  showWoodColors?: boolean;
   defaultColorId?: string;
   onColorChange?: (colorId: string) => void;
+  customColors?: Color[];
+  customSolidColors?: Color[];
 }
 
 export default function ColorSimulator({ 
   showWoodColors = true, 
-  defaultColorId = 'preto',
-  onColorChange
+  defaultColorId = 'black',
+  onColorChange,
+  customColors,
+  customSolidColors
 }: ColorSimulatorProps) {
   const [selectedColorId, setSelectedColorId] = useState(defaultColorId);
   const [colorType, setColorType] = useState<'solid' | 'wood'>('solid');
+
+  // Sincroniza o estado interno com o prop defaultColorId quando ele muda externamente
+  React.useEffect(() => {
+    setSelectedColorId(defaultColorId);
+  }, [defaultColorId]);
 
   const handleColorSelect = (colorId: string) => {
     setSelectedColorId(colorId);
@@ -27,13 +37,17 @@ export default function ColorSimulator({
     }
   };
 
-  // Filtra as cores com base na configuração
-  const filteredColors = GLOBAL_COLORS.filter(c => {
-    if (!showWoodColors && c.type === 'wood') return false;
-    return c.type === colorType;
+  // Usa as cores customizadas se fornecidas, senão usa as globais
+  const currentSolidColors = customSolidColors || SOLID_COLORS;
+  const currentWoodColors = customColors || WOOD_COLORS;
+
+  // Filtra as cores com base na categoria
+  const filteredColors = (colorType === 'solid' ? currentSolidColors : currentWoodColors).filter(c => {
+    if (!showWoodColors && c.category === 'wood') return false;
+    return true;
   });
 
-  const currentColor = GLOBAL_COLORS.find(c => c.id === selectedColorId) || GLOBAL_COLORS[0];
+  const currentColor = getColorById(selectedColorId) || SOLID_COLORS[0];
 
   return (
     <div className="space-y-8">
@@ -72,9 +86,14 @@ export default function ColorSimulator({
                 selectedColorId === color.id ? 'border-emerald-500 scale-110' : 'border-transparent group-hover:border-gray-100'
               }`}>
                 <div 
-                  className={`w-full h-full rounded-full border ${color.id === 'branco' ? 'border-gray-200' : 'border-transparent'}`}
-                  style={{ backgroundColor: color.hex }}
-                />
+                  className={`w-full h-full rounded-full border overflow-hidden ${color.id === 'white' ? 'border-gray-200' : 'border-transparent'}`}
+                >
+                  {color.image ? (
+                    <img src={color.image} alt={color.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full" style={{ backgroundColor: color.hexCode }} />
+                  )}
+                </div>
                 {selectedColorId === color.id && (
                   <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5">
                     <Check size={10} strokeWidth={4} />
@@ -90,9 +109,14 @@ export default function ColorSimulator({
 
         <div className="bg-gray-50 rounded-2xl p-6 flex items-center gap-6">
           <div 
-            className="w-16 h-16 rounded-full shadow-inner border border-black/5"
-            style={{ backgroundColor: currentColor.hex }}
-          />
+            className="w-16 h-16 rounded-full shadow-inner border border-black/5 overflow-hidden"
+          >
+            {currentColor.image ? (
+              <img src={currentColor.image} alt={currentColor.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full" style={{ backgroundColor: currentColor.hexCode }} />
+            )}
+          </div>
           <div>
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Acabamento Selecionado</p>
             <h4 className="font-bold text-xl">{currentColor.name}</h4>
@@ -112,12 +136,10 @@ export default function ColorSimulator({
           {/* Imagem de Ambiente (Expanded) */}
           <div className="md:col-span-2 relative aspect-video rounded-2xl overflow-hidden group bg-gray-100">
             <img 
-              // DICA: Para usar imagens reais, salve-as em /public/images/finishes/ com o nome da cor (ex: preto.png)
-              src={`/images/finishes/${selectedColorId}.png`}
+              src={currentColor.finishImage || `/images/finishes/${selectedColorId}.png`}
               alt="Preview Ambiente"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               onError={(e) => {
-                // Fallback caso a imagem local não exista ainda
                 const target = e.target as HTMLImageElement;
                 target.src = `https://picsum.photos/seed/finish-${selectedColorId}/800/450`;
               }}
@@ -132,12 +154,10 @@ export default function ColorSimulator({
           {/* Perfil Técnico (Expanded) */}
           <div className="relative aspect-square md:aspect-auto rounded-2xl overflow-hidden border border-gray-100 bg-white group">
             <img 
-              // DICA: Para usar imagens reais, salve-as em /public/images/profiles/ com o nome da cor (ex: preto.png)
-              src={`/images/profiles/${selectedColorId}.png`}
+              src={currentColor.profileImage || `/images/profiles/${selectedColorId}.png`}
               alt="Perfil Técnico"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               onError={(e) => {
-                // Fallback caso a imagem local não exista ainda
                 const target = e.target as HTMLImageElement;
                 target.src = `https://picsum.photos/seed/profile-${selectedColorId}/400/400`;
               }}

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
   ChevronRight, 
@@ -16,9 +16,11 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { colors } from '@/lib/colors';
+import { WOOD_COLORS, SOLID_COLORS, PRODUCT_LINES, getColorById } from '@/lib/colors';
 import ColorSimulator from '@/components/ColorSimulator';
 import ImageUploader from '@/components/ImageUploader';
+
+const PRODUCT_LINES_ARRAY = Object.values(PRODUCT_LINES);
 
 // --- Types & Schemas ---
 
@@ -37,61 +39,58 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const productLines = [
-  {
-    id: 'perfetta',
-    name: 'Linha Perfetta™',
-    tag: 'Premium',
-    description: 'Design minimalista e industrial, isolamento acústico absoluto e vedação hermética.',
-    color: 'bg-black text-white',
-    tagColor: 'bg-black text-white'
-  },
-  {
-    id: 'gold',
-    name: 'Linha Gold',
-    tag: 'Intermediária',
-    description: 'Qualidade superior com excelente custo-benefício para projetos residenciais.',
-    color: 'bg-white border-gray-200',
-    tagColor: 'bg-orange-500 text-white'
-  },
-  {
-    id: 'portas',
-    name: 'Portas de Entrada',
-    tag: 'Especial',
-    description: 'Portas pivotantes de entrada em alumínio de alta gestão.',
-    color: 'bg-white border-gray-200',
-    tagColor: 'bg-blue-500 text-white'
-  },
-  {
-    id: 'brise',
-    name: 'Brise / Painéis',
-    tag: 'Decorativa',
-    description: 'Brises e painéis decorativos para fachadas modernas.',
-    color: 'bg-white border-gray-200',
-    tagColor: 'bg-emerald-500 text-white'
-  }
-];
-
-// --- Components ---
-
 export default function BudgetPage() {
-  const [selectedLine, setSelectedLine] = useState(productLines[0].id);
-  const [selectedColorId, setSelectedColorId] = useState('preto');
-  const [colorType, setColorType] = useState<'solid' | 'wood'>('solid');
+  const [selectedLine, setSelectedLine] = useState(PRODUCT_LINES_ARRAY[0].id);
+  const [selectedColorId, setSelectedColorId] = useState('black');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [customProfileImage, setCustomProfileImage] = useState<string | null>(null);
+
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
 
   const onSubmit = (data: FormData) => {
-    console.log('Form Data:', data, { selectedLine, selectedColorId });
-    alert('Orçamento solicitado com sucesso! Entraremos em contato em breve.');
+    const line = PRODUCT_LINES[selectedLine];
+    const color = getColorById(selectedColorId);
+    
+    console.log('Form Data:', data, { line, color });
+    
+    // Preparando para o WhatsApp oficial
+    const message = `Olá! Gostaria de um orçamento para:\n\n` +
+      `*Linha:* ${line.displayName}\n` +
+      `*Cor:* ${color?.name}\n\n` +
+      `*Dados do Cliente:*\n` +
+      `*Nome:* ${data.nome}\n` +
+      `*WhatsApp:* ${data.whatsapp}\n` +
+      `*Endereço:* ${data.rua}, ${data.numero} - ${data.bairro}, ${data.cidade}/${data.estado}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    // Substitua pelo número real da Realiza quando tiver
+    window.open(`https://wa.me/5511999999999?text=${encodedMessage}`, '_blank');
   };
 
-  const currentLine = productLines.find(l => l.id === selectedLine);
-  const currentColor = colors.find(c => c.id === selectedColorId);
+  const handleLineChange = (lineId: string) => {
+    setSelectedLine(lineId);
+    const line = PRODUCT_LINES[lineId];
+    // Reseta para a primeira cor disponível da linha
+    if (line.solidColors && line.solidColors.length > 0) {
+      setSelectedColorId(line.solidColors[0].id);
+    } else if (line.colors && line.colors.length > 0) {
+      setSelectedColorId(line.colors[0].id);
+    }
+  };
+
+  const currentLine = PRODUCT_LINES[selectedLine];
+  const currentColor = getColorById(selectedColorId);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -172,7 +171,7 @@ export default function BudgetPage() {
             
             <div className="relative h-full w-full bg-white rounded-[1.25rem] overflow-hidden">
               <img 
-                src={customProfileImage || `/images/profiles/${selectedColorId}.png`}
+                src={customProfileImage || currentColor?.profileImage || `/images/profiles/${selectedColorId}.png`}
                 alt="Perfil Técnico"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 onError={(e) => {
@@ -205,219 +204,111 @@ export default function BudgetPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-12">
-          {/* Left Column: Selection */}
-          <div className="lg:col-span-4 space-y-12">
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Selection (3 cols) */}
+          <div className="lg:col-span-3 space-y-8 order-2 lg:order-1">
             {/* 1. Escolha a Linha */}
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-bold">1</span>
-                <h2 className="text-xl font-bold">Escolha a Linha</h2>
+                <h2 className="text-lg font-bold">Escolha a Linha</h2>
               </div>
-              <div className="space-y-4">
-                {productLines.map((line) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                {PRODUCT_LINES_ARRAY.map((line) => (
                   <button
                     key={line.id}
-                    onClick={() => setSelectedLine(line.id)}
-                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all relative group ${
+                    onClick={() => handleLineChange(line.id)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all relative group ${
                       selectedLine === line.id 
-                        ? 'border-black bg-white shadow-xl scale-[1.02]' 
+                        ? 'border-black bg-white shadow-md scale-[1.02]' 
                         : 'border-transparent bg-white hover:border-gray-200'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-lg">{line.name}</h3>
-                      <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-md ${line.tagColor}`}>
-                        {line.tag}
-                      </span>
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-bold text-sm">{line.displayName}</h3>
+                      {line.hasBonus && (
+                        <span className="text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-md bg-emerald-500 text-white">
+                          BÔNUS
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-[11px] text-gray-500 leading-tight line-clamp-2">
                       {line.description}
                     </p>
-                    {selectedLine === line.id && (
-                      <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-12 bg-black rounded-full" />
-                    )}
-                    <div className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Check size={14} className="text-emerald-600" />
-                      Selecionado
-                    </div>
                   </button>
                 ))}
               </div>
             </section>
           </div>
 
-          {/* Middle Column: Customization & Preview */}
-          <div className="lg:col-span-8">
+          {/* Middle Column: Customization & Preview (6 cols) */}
+          <div className="lg:col-span-6 space-y-8 order-1 lg:order-2">
             <ColorSimulator 
-              showWoodColors={true} 
+              showWoodColors={currentLine.id !== 'acm'} 
               defaultColorId={selectedColorId} 
               onColorChange={setSelectedColorId}
+              customColors={currentLine.colors}
+              customSolidColors={currentLine.solidColors}
             />
             
-            {/* Área de Teste de Upload (Opcional) */}
-            <div className="mt-12 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 mb-4 text-center uppercase tracking-widest">Área de Teste: Upload de Imagem</h3>
+            {/* Área de Teste de Upload */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <h3 className="text-[10px] font-bold text-gray-400 mb-4 text-center uppercase tracking-widest">Área de Teste: Upload de Perfil</h3>
               <ImageUploader onImageUploadSuccess={(url) => setCustomProfileImage(url)} />
-              <p className="mt-4 text-[10px] text-gray-400 text-center italic">
-                * Teste como seus perfis técnicos ficam no enquadramento.
-              </p>
+            </div>
+          </div>
+
+          {/* Right Column: Form (3 cols) */}
+          <div className="lg:col-span-3 order-3">
+            <div className="lg:sticky lg:top-24">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-bold">3</span>
+                <h2 className="text-lg font-bold">Seus Dados</h2>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg space-y-4">
+                <div className="space-y-4">
+                  <div className="group">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Nome *</label>
+                    <input {...register('nome')} placeholder="Seu nome" className="w-full bg-gray-50 border border-gray-100 focus:border-black rounded-lg px-3 py-2 text-sm outline-none transition-all" />
+                    {errors.nome && <p className="text-red-500 text-[10px] mt-1">{errors.nome.message}</p>}
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">WhatsApp *</label>
+                    <input {...register('whatsapp')} placeholder="(11) 99999-9999" className="w-full bg-gray-50 border border-gray-100 focus:border-black rounded-lg px-3 py-2 text-sm outline-none transition-all" />
+                    {errors.whatsapp && <p className="text-red-500 text-[10px] mt-1">{errors.whatsapp.message}</p>}
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">CEP *</label>
+                    <input {...register('cep')} placeholder="00000-000" className="w-full bg-gray-50 border border-gray-100 focus:border-black rounded-lg px-3 py-2 text-sm outline-none transition-all" />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Cidade *</label>
+                    <input {...register('cidade')} placeholder="Sua cidade" className="w-full bg-gray-50 border border-gray-100 focus:border-black rounded-lg px-3 py-2 text-sm outline-none transition-all" />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-50">
+                  <div className="mb-4">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Resumo</p>
+                    <p className="text-xs font-bold">{currentLine?.displayName} • {currentColor?.name}</p>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    className="w-full bg-black text-white py-3 rounded-xl font-bold text-sm hover:bg-gray-900 transition-all flex items-center justify-center gap-2"
+                  >
+                    Solicitar Orçamento
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
-
-        {/* 3. Seus Dados */}
-        <section className="mt-20">
-          <div className="flex items-center gap-3 mb-8">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-bold">3</span>
-            <h2 className="text-2xl font-bold">Seus Dados</h2>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-3xl p-8 md:p-12 border border-gray-100 shadow-xl">
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              <div className="space-y-6">
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Nome Completo *</label>
-                  <input 
-                    {...register('nome')}
-                    placeholder="Seu nome"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                  {errors.nome && <p className="text-red-500 text-xs mt-1">{errors.nome.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">WhatsApp *</label>
-                  <input 
-                    {...register('whatsapp')}
-                    placeholder="(11) 99999-9999"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                  {errors.whatsapp && <p className="text-red-500 text-xs mt-1">{errors.whatsapp.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Rua *</label>
-                  <input 
-                    {...register('rua')}
-                    placeholder="Nome da rua"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                  {errors.rua && <p className="text-red-500 text-xs mt-1">{errors.rua.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Complemento</label>
-                  <input 
-                    {...register('complemento')}
-                    placeholder="Apto, bloco, etc"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="group">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Bairro *</label>
-                    <input 
-                      {...register('bairro')}
-                      placeholder="Bairro"
-                      className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Cidade *</label>
-                    <input 
-                      {...register('cidade')}
-                      placeholder="Cidade"
-                      className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Email *</label>
-                  <input 
-                    {...register('email')}
-                    placeholder="seu@email.com"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">CEP *</label>
-                  <input 
-                    {...register('cep')}
-                    placeholder="00000-000"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                  {errors.cep && <p className="text-red-500 text-xs mt-1">{errors.cep.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Número *</label>
-                  <input 
-                    {...register('numero')}
-                    placeholder="123"
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all"
-                  />
-                  {errors.numero && <p className="text-red-500 text-xs mt-1">{errors.numero.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Estado *</label>
-                  <input 
-                    {...register('estado')}
-                    placeholder="SP"
-                    maxLength={2}
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white rounded-xl px-4 py-3 outline-none transition-all uppercase"
-                  />
-                  {errors.estado && <p className="text-red-500 text-xs mt-1">{errors.estado.message}</p>}
-                </div>
-
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Upload de Projetos (Opcional)</label>
-                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-black transition-colors cursor-pointer bg-gray-50">
-                    <Upload className="mx-auto mb-4 text-gray-400" />
-                    <p className="text-sm font-bold mb-1">Clique para fazer upload ou arraste e solte</p>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">PDF, JPG, PNG, ZIP (máx 10MB por arquivo)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Resumo */}
-            <div className="bg-gray-50 rounded-2xl p-8 mb-12 border border-gray-100">
-              <h3 className="font-bold text-lg mb-6">Resumo do Orçamento</h3>
-              <div className="flex flex-col md:flex-row justify-between gap-8">
-                <div className="flex-1">
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-2">Linha</p>
-                  <p className="font-bold text-xl">{currentLine?.name}</p>
-                </div>
-                <div className="flex-1 text-right md:text-left">
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-2">Cor</p>
-                  <div className="flex items-center md:justify-start justify-end gap-3">
-                    <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: currentColor?.hex }} />
-                    <p className="font-bold text-xl">{currentColor?.name}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button 
-              type="submit"
-              className="w-full bg-[#0F172A] text-white py-6 rounded-2xl font-bold text-xl hover:bg-black transition-all shadow-2xl shadow-black/20 flex items-center justify-center gap-3 group"
-            >
-              Solicitar Orçamento
-              <ChevronRight className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <p className="text-center mt-6 text-xs text-gray-400">
-              Seus dados estão 100% seguros. Não fazemos spam.
-            </p>
-          </form>
-        </section>
       </main>
 
       {/* Footer */}
@@ -458,7 +349,7 @@ export default function BudgetPage() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-gray-50 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} Realiza Esquadrias. Todos os direitos reservados.
+          © {isMounted ? (currentYear || 2026) : 2026} Realiza Esquadrias. Todos os direitos reservados.
         </div>
       </footer>
     </div>
