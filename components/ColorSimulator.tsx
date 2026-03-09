@@ -135,16 +135,39 @@ export default function ColorSimulator({
         <div className="grid md:grid-cols-3 gap-6">
           {/* Imagem de Ambiente (Expanded) */}
           <div className="md:col-span-2 relative aspect-video rounded-2xl overflow-hidden group bg-gray-100">
-            <img 
-              src={currentColor.finishImage || `/images/finishes/${selectedColorId}.png`}
-              alt="Preview Ambiente"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = `https://picsum.photos/seed/finish-${selectedColorId}/800/450`;
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedColorId}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full h-full"
+              >
+                <img 
+                  src={currentColor.finishImage || `/images/finishes/${selectedColorId}.png`}
+                  alt="Preview Ambiente"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    // Se a imagem falhar, mostramos o HexCode como fundo
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.style.backgroundColor = currentColor.hexCode || '#f3f4f6';
+                      // Adiciona um texto de fallback se não houver imagem
+                      if (!parent.querySelector('.fallback-text')) {
+                        const text = document.createElement('div');
+                        text.className = 'fallback-text absolute inset-0 flex items-center justify-center text-white/20 font-bold text-4xl uppercase tracking-widest pointer-events-none';
+                        text.innerText = currentColor.name;
+                        parent.appendChild(text);
+                      }
+                    }
+                  }}
+                />
+              </motion.div>
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute bottom-6 left-6 text-white">
               <p className="text-[10px] uppercase tracking-widest font-bold opacity-70 mb-1">Ambiente</p>
               <h3 className="text-2xl font-bold">{currentColor.name}</h3>
